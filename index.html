@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Information Lookup</title>
     <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div id="loading">Loading...</div>
+        <div id="clerk-auth"></div>
+        <div class="container" id="main-content" style="display: none;">
+            <h1>Vehicle Information Lookup</h1>
+            <form id="lookupForm">
+                <label for="vin">Enter VIN:</label>
+                <input type="text" id="vin" name="vin" required>
+                <label for="rooftop">Select Rooftop ID:</label>
+                <select id="rooftop" name="rooftop" required>
+                    <option value="CurtisChev">CurtisChev</option>
+                    <option value="DelrayBGMC">DelrayBGMC</option>
+                    <option value="AcuraRochester">AcuraRochester</option>
+                    <option value="GarberAutomall">GarberAutomall</option>
+                    <option value="GarberBayRoad">GarberBayRoad</option>
+                    <option value="GarberBGMCFtPierce">GarberBGMCFtPierce</option>
+                    <option value="GarberBuickSaginaw">GarberBuickSaginaw</option>
+                    <option value="GarberCBChesaning">GarberCBChesaning</option>
+                    <option value="GarberChevHighland">GarberChevHighland</option>
+                    <option value="GarberChevLinwood">GarberChevLinwood</option>
+                    <option value="GarberChevMidland">GarberChevMidland</option>
+                    <option value="GarberChevSaginaw">GarberChevSaginaw</option>
+                    <option value="Garber_ChevSubaru">Garber_ChevSubaru</option>
+                    <option value="GarberHonda">GarberHonda</option>
+                    <option value="HH_BGMCCadillac">HH_BGMCCadillac</option>
+                    <option value="NissanBradenton">NissanBradenton</option>
+                    <option value="PorscheAudiRochester">PorscheAudiRochester</option>
+                    <option value="SunriseChevGH">SunriseChevGH</option>
+                    <option value="VolvoCarsRochester">VolvoCarsRochester</option>
+                    <option value="GarberRandalChev">GarberRandalChev</option>
+                    <option value="GarberRandallBuickGMCCadillac">GarberRandallBuickGMCCadillac</option>
+                </select>
+                <button type="submit">Lookup</button>
+            </form>
+            <div id="results"></div>
+        </div>
+    </div>
     <!-- Include Clerk JavaScript SDK -->
     <script
       async
@@ -13,71 +52,59 @@
       src="https://proven-ray-94.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
       type="text/javascript">
     </script>
-</head>
-<body>
-    <div id="app">
-        <clerk-loading>
-            <div id="loading">Loading...</div>
-        </clerk-loading>
-        <clerk-loaded>
-            <clerk-signed-in>
-                <div id="main-content">
-                    <div id="user-button"></div>
-                    <h1>Vehicle Information Lookup</h1>
-                    <form id="lookupForm">
-                        <label for="vin">Enter VIN:</label>
-                        <input type="text" id="vin" name="vin" required>
-                        <label for="rooftop">Select Rooftop ID:</label>
-                        <select id="rooftop" name="rooftop" required>
-                            <option value="CurtisChev">CurtisChev</option>
-                            <option value="DelrayBGMC">DelrayBGMC</option>
-                            <option value="AcuraRochester">AcuraRochester</option>
-                            <option value="GarberAutomall">GarberAutomall</option>
-                            <option value="GarberBayRoad">GarberBayRoad</option>
-                            <option value="GarberBGMCFtPierce">GarberBGMCFtPierce</option>
-                            <option value="GarberBuickSaginaw">GarberBuickSaginaw</option>
-                            <option value="GarberCBChesaning">GarberCBChesaning</option>
-                            <option value="GarberChevHighland">GarberChevHighland</option>
-                            <option value="GarberChevLinwood">GarberChevLinwood</option>
-                            <option value="GarberChevMidland">GarberChevMidland</option>
-                            <option value="GarberChevSaginaw">GarberChevSaginaw</option>
-                            <option value="Garber_ChevSubaru">Garber_ChevSubaru</option>
-                            <option value="GarberHonda">GarberHonda</option>
-                            <option value="HH_BGMCCadillac">HH_BGMCCadillac</option>
-                            <option value="NissanBradenton">NissanBradenton</option>
-                            <option value="PorscheAudiRochester">PorscheAudiRochester</option>
-                            <option value="SunriseChevGH">SunriseChevGH</option>
-                            <option value="VolvoCarsRochester">VolvoCarsRochester</option>
-                            <option value="GarberRandalChev">GarberRandalChev</option>
-                            <option value="GarberRandallBuickGMCCadillac">GarberRandallBuickGMCCadillac</option>
-                        </select>
-                        <button type="submit">Lookup</button>
-        </form>
-                    <div id="results"></div>
-                </div>
-            </clerk-signed-in>
-            <clerk-signed-out>
-                <div id="clerk-auth">
-                    <clerk-sign-in></clerk-sign-in>
-                </div>
-            </clerk-signed-out>
-        </clerk-loaded>
-    </div>
     <script>
-        window.addEventListener("load", async function () {
-            await Clerk.load();
+      window.addEventListener("load", async function () {
+        await Clerk.load();
 
-            if (Clerk.user) {
-                document.getElementById("user-button").innerHTML = `<clerk-user-button></clerk-user-button>`;
-                document.getElementById("main-content").style.display = "block";
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("clerk-auth").style.display = "none";
-            } else {
-                Clerk.mountSignIn("#clerk-auth", {
-                    afterSignInUrl: window.location.href,
-                });
-            }
-        });
+        if (Clerk.user) {
+          document.getElementById("app").innerHTML = `
+            <div id="user-button"></div>
+            <div class="container" id="main-content">
+              <h1>Vehicle Information Lookup</h1>
+              <form id="lookupForm">
+                <label for="vin">Enter VIN:</label>
+                <input type="text" id="vin" name="vin" required>
+                <label for="rooftop">Select Rooftop ID:</label>
+                <select id="rooftop" name="rooftop" required>
+                  <option value="CurtisChev">CurtisChev</option>
+                  <option value="DelrayBGMC">DelrayBGMC</option>
+                  <option value="AcuraRochester">AcuraRochester</option>
+                  <option value="GarberAutomall">GarberAutomall</option>
+                  <option value="GarberBayRoad">GarberBayRoad</option>
+                  <option value="GarberBGMCFtPierce">GarberBGMCFtPierce</option>
+                  <option value="GarberBuickSaginaw">GarberBuickSaginaw</option>
+                  <option value="GarberCBChesaning">GarberCBChesaning</option>
+                  <option value="GarberChevHighland">GarberChevHighland</option>
+                  <option value="GarberChevLinwood">GarberChevLinwood</option>
+                  <option value="GarberChevMidland">GarberChevMidland</option>
+                  <option value="GarberChevSaginaw">GarberChevSaginaw</option>
+                  <option value="Garber_ChevSubaru">Garber_ChevSubaru</option>
+                  <option value="GarberHonda">GarberHonda</option>
+                  <option value="HH_BGMCCadillac">HH_BGMCCadillac</option>
+                  <option value="NissanBradenton">NissanBradenton</option>
+                  <option value="PorscheAudiRochester">PorscheAudiRochester</option>
+                  <option value="SunriseChevGH">SunriseChevGH</option>
+                  <option value="VolvoCarsRochester">VolvoCarsRochester</option>
+                  <option value="GarberRandalChev">GarberRandalChev</option>
+                  <option value="GarberRandallBuickGMCCadillac">GarberRandallBuickGMCCadillac</option>
+                </select>
+                <button type="submit">Lookup</button>
+              </form>
+              <div id="results"></div>
+            </div>
+          `;
+
+          const userButtonDiv = document.getElementById("user-button");
+          Clerk.mountUserButton(userButtonDiv);
+        } else {
+          document.getElementById("app").innerHTML = `
+            <div id="sign-in"></div>
+          `;
+
+          const signInDiv = document.getElementById("sign-in");
+          Clerk.mountSignIn(signInDiv);
+        }
+      });
     </script>
     <script src="script.js"></script>
 </body>
