@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Information Lookup</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Include Clerk JavaScript SDK -->
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key="pk_test_cHJvdmVuLXJheS05NC5jbGVyay5hY2NvdW50cy5kZXYk"
+      src="https://proven-ray-94.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+      type="text/javascript">
+    </script>
 </head>
 <body>
     <div id="app">
         <div id="loading">Loading...</div>
         <div id="clerk-auth"></div>
         <div class="container" id="main-content" style="display: none;">
+            <div id="user-button"></div>
             <h1>Vehicle Information Lookup</h1>
             <form id="lookupForm">
                 <label for="vin">Enter VIN:</label>
@@ -39,19 +48,11 @@
                     <option value="GarberRandalChev">GarberRandalChev</option>
                     <option value="GarberRandallBuickGMCCadillac">GarberRandallBuickGMCCadillac</option>
                 </select>
-                <button type="submit">Lookup</button>
+                <button type="submit">Lookup from HomeNet</button>
             </form>
             <div id="results"></div>
         </div>
     </div>
-    <!-- Include Clerk JavaScript SDK -->
-    <script
-      async
-      crossorigin="anonymous"
-      data-clerk-publishable-key="pk_test_cHJvdmVuLXJheS05NC5jbGVyay5hY2NvdW50cy5kZXYk"
-      src="https://proven-ray-94.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-      type="text/javascript">
-    </script>
     <script>
       window.addEventListener("load", async function () {
         await Clerk.load();
@@ -88,7 +89,7 @@
                   <option value="GarberRandalChev">GarberRandalChev</option>
                   <option value="GarberRandallBuickGMCCadillac">GarberRandallBuickGMCCadillac</option>
                 </select>
-                <button type="submit">Lookup</button>
+                <button type="submit">Lookup from HomeNet</button>
               </form>
               <div id="results"></div>
             </div>
@@ -96,6 +97,13 @@
 
           const userButtonDiv = document.getElementById("user-button");
           Clerk.mountUserButton(userButtonDiv);
+
+          // Add event listener for form submission
+          document.getElementById('lookupForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+            await fetchVehicleData();
+          });
+
         } else {
           document.getElementById("app").innerHTML = `
             <div id="sign-in"></div>
@@ -105,7 +113,122 @@
           Clerk.mountSignIn(signInDiv);
         }
       });
+
+      async function fetchVehicleData() {
+        const vin = document.getElementById('vin').value;
+        const rooftop = document.getElementById('rooftop').value;
+        const fetchBoth = document.getElementById('fetchBoth').checked;
+        const proxyUrl = `http://localhost:3000/api/vehicle-details`; // Change this to your proxy server's URL
+
+        const params = new URLSearchParams({
+            vin: vin,
+            rooftop: rooftop
+        });
+
+        const url = `${proxyUrl}?${params.toString()}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/xml'
+                }
+            });
+
+            const responseText = await response.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(responseText, 'application/xml');
+
+            const isSuccess = xmlDoc.getElementsByTagName('IsSuccess')[0].textContent === 'true';
+
+            if (isSuccess) {
+                const compressedVehicles = xmlDoc.getElementsByTagName('CompressedVehicles')[0].textContent;
+                const decodedVehicles = decodeHtml(compressedVehicles);
+                const vehicleData = parseVehicleData(decodedVehicles);
+                displayResults(vehicleData, 'HomeNet');
+            } else {
+                const errorMessage = xmlDoc.getElementsByTagName('ErrorMessage')[0].textContent;
+                displayError(errorMessage);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            displayError('An error occurred while fetching the data.');
+        }
+      }
+
+      function decodeHtml(html) {
+        const txt = document.createElement('textarea');
+        txt.innerHTML = html;
+        return txt.value;
+      }
+
+      function parseVehicleData(xmlString) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+        const vehicleNode = xmlDoc.getElementsByTagName('V')[0];
+        return {
+            vin: vehicleNode.getAttribute('_0'),
+            stock: vehicleNode.getAttribute('_1'),
+            type: vehicleNode.getAttribute('_2'),
+            miles: vehicleNode.getAttribute('_3'),
+            sellingPrice: vehicleNode.getAttribute('_4'),
+            msrp: vehicleNode.getAttribute('_5'),
+            bookValue: vehicleNode.getAttribute('_6'),
+            invoice: vehicleNode.getAttribute('_7'),
+            miscPrice1: vehicleNode.getAttribute('_8'),
+            miscPrice2: vehicleNode.getAttribute('_9'),
+            miscPrice3: vehicleNode.getAttribute('_10'),
+            vehicleId: vehicleNode.getAttribute('_11'),
+            hmgroupId: vehicleNode.getAttribute('_12'),
+            hnilotId: vehicleNode.getAttribute('_13'),
+            year: vehicleNode.getAttribute('_14'),
+            make: vehicleNode.getAttribute('_15'),
+            model: vehicleNode.getAttribute('_16'),
+            stockImage: vehicleNode.getAttribute('_17'),
+            factoryCodes: vehicleNode.getAttribute('_18'),
+            packageCodes: vehicleNode.getAttribute('_19'),
+            daysInStock: vehicleNode.getAttribute('_20'),
+            imageCount: vehicleNode.getAttribute('_21'),
+            rooftopName: vehicleNode.getAttribute('_22'),
+            dealerName: vehicleNode.getAttribute('_23'),
+            chromeStyleId: vehicleNode.getAttribute('_24'),
+            chromeMultiViewExt1Url: vehicleNode.getAttribute('_25')
+        };
+      }
+
+      function displayResults(vehicleData, source) {
+        const resultsDiv = document.getElementById('results');
+        const sourceLabel = source === 'HomeNet' ? 'HomeNet' : 'Dealer.com';
+
+        const vehicleDetails = `
+            <h2>Vehicle Information (${sourceLabel})</h2>
+            <p><strong>VIN:</strong> ${vehicleData.vin}</p>
+            <p><strong>Stock:</strong> ${vehicleData.stock}</p>
+            <p><strong>Type:</strong> ${vehicleData.type}</p>
+            <p><strong>Miles:</strong> ${vehicleData.miles}</p>
+            <p><strong>Selling Price:</strong> ${vehicleData.sellingPrice}</p>
+            <p><strong>MSRP:</strong> ${vehicleData.msrp}</p>
+            <p><strong>Book Value:</strong> ${vehicleData.bookValue}</p>
+            <p><strong>Invoice:</strong> ${vehicleData.invoice}</p>
+            <p><strong>Misc Price 1:</strong> ${vehicleData.miscPrice1}</p>
+            <p><strong>Misc Price 2:</strong> ${vehicleData.miscPrice2}</p>
+            <p><strong>Misc Price 3:</strong> ${vehicleData.miscPrice3}</p>
+            <p><strong>Year:</strong> ${vehicleData.year}</p>
+            <p><strong>Make:</strong> ${vehicleData.make}</p>
+            <p><strong>Model:</strong> ${vehicleData.model}</p>
+            ${vehicleData.stockImage ? `<p><strong>Stock Image:</strong> <img src="${vehicleData.stockImage}" alt="Stock Image" /></p>` : ''}
+            ${vehicleData.dealerName ? `<p><strong>Dealer Name:</strong> ${vehicleData.dealerName}</p>` : ''}
+            ${vehicleData.dealerUrl ? `<p><strong>Dealer URL:</strong> <a href="${vehicleData.dealerUrl}" target="_blank">${vehicleData.dealerUrl}</a></p>` : ''}
+            ${vehicleData.dealershipAddress ? `<p><strong>Dealership Address:</strong> ${vehicleData.dealershipAddress}</p>` : ''}
+        `;
+
+        resultsDiv.innerHTML = vehicleDetails;
+      }
+
+      function displayError(message) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `<p style="color: red;">${message}</p>`;
+      }
     </script>
-    <script src="script.js"></script>
 </body>
 </html>
