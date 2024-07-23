@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Information Lookup</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Vehicle Information Lookup</h1>
+        <form id="lookupForm">
+            <label for="vin">Enter VIN:</label>
+            <input type="text" id="vin" name="vin" required>
+            <label for="rooftop">Select Rooftop ID:</label>
+            <select id="rooftop" name="rooftop" required>
+                <option value="CurtisChev">CurtisChev</option>
+                <option value="DelrayBGMC">DelrayBGMC</option>
+                <option value="AcuraRochester">AcuraRochester</option>
+                <option value="GarberAutomall">GarberAutomall</option>
+                <option value="GarberBayRoad">GarberBayRoad</option>
+                <!-- Add all other options here -->
+            </select>
+            <button type="submit">Lookup</button>
+        </form>
+        <div id="results"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
